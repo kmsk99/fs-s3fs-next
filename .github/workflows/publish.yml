@@ -1,0 +1,36 @@
+name: Publish to PyPI
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  verify:
+    uses: ./.github/workflows/fs-next.yml
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fs-s3fs-next/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist
+      - name: Verify release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import glob, os, zipfile
+          from email.parser import BytesParser
+          with zipfile.ZipFile(glob.glob('dist/*.whl')[0]) as wheel:
+              name = next(n for n in wheel.namelist() if n.endswith('.dist-info/METADATA'))
+              metadata = BytesParser().parsebytes(wheel.read(name))
+          assert metadata['Name'] == 'fs-s3fs-next'
+          assert os.environ['RELEASE_TAG'] == 'v' + metadata['Version']
+          PY
+      - uses: pypa/gh-action-pypi-publish@release/v1

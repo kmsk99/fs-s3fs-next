@@ -1,5 +1,5 @@
-S3FS
-====
+FS S3FS Next
+============
 
 S3FS is a `PyFilesystem <https://www.pyfilesystem.org/>`__ interface to
 Amazon S3 cloud storage.
@@ -8,6 +8,35 @@ As a PyFilesystem concrete class,
 `S3FS <http://fs-s3fs.readthedocs.io/en/latest/>`__ allows you to work
 with S3 in the same way as any other supported filesystem.
 
+Independent maintenance fork of `PyFilesystem/s3fs <https://github.com/PyFilesystem/s3fs>`_
+by Will McGugan and contributors. Original MIT license and Git history are
+preserved. This is not an official PyFilesystem release. Requires Python 3.10+;
+uses `FS Next <https://github.com/kmsk99/fs-next>`_ while retaining the
+``fs_s3fs`` import and ``s3://`` opener.
+
+Migration
+---------
+
+Create a fresh virtual environment and replace ``fs-s3fs`` with
+``fs-s3fs-next`` and ``fs`` with ``fs-next`` in your dependency declarations.
+Regenerate lock files. Do not install either pair together: they provide the
+same Python modules, and uninstalling one can break the other. Packages that
+still require ``fs`` or ``fs-s3fs`` must update their dependency metadata first.
+A constraints file cannot substitute distribution names.
+
+::
+
+    python -m venv .venv-next
+    # Activate the environment, then:
+    python -m pip install fs-s3fs-next==0.1.0
+    python -m pip check
+
+For uv or Poetry projects, make the same declaration replacements, regenerate
+the lock, and sync into a fresh environment. The fork uses its own version
+series: 0.1.0 is based on upstream 1.1.1 plus compatibility fixes.
+To roll back, restore the previous declarations and lock into another fresh
+environment rather than co-installing the packages.
+
 Installing
 ----------
 
@@ -15,7 +44,7 @@ You can install S3FS from pip as follows:
 
 ::
 
-    pip install fs-s3fs
+    python -m pip install fs-s3fs-next
 
 Opening a S3FS
 --------------
@@ -92,7 +121,7 @@ and can be used in URLs. It is important to URL-Escape the
 .. code:: python
 
     import fs, fs.mirror
-    with open fs.open_fs('s3://example?acl=public-read&cache_control=max-age%3D2592000%2Cpublic') as s3fs
+    with fs.open_fs('s3://example?acl=public-read&cache_control=max-age%3D2592000%2Cpublic') as s3fs:
         fs.mirror.mirror('/path/to/mirror', s3fs)
 
 S3 URLs
@@ -113,13 +142,7 @@ Documentation
    Reference <https://docs.pyfilesystem.org/en/latest/reference/base.html>`__
 
 FS Next migration for Python 3.10+
----------------------------------
-
-This branch proposes using ``fs-next>=0.1.1,<0.2`` on Python 3.10 and later.
-Older Python versions retain ``fs~=2.4``. The ``fs_s3fs`` import and ``s3://``
-opener remain unchanged. Install into a fresh environment: ``fs`` and
-``fs-next`` provide overlapping files and must not coexist. Any other package
-requiring ``fs`` must migrate its dependency metadata as well.
+----------------------------------
 
 The migration includes ``preserve_time`` argument compatibility, safe same-path
 copy/move handling and binary stream ``mode`` / ``readinto`` corrections.
@@ -134,8 +157,7 @@ AWS account or credentials::
     python -I -m pytest tests/test_fs_next.py -q -ra
 
 Moto exercises local S3 API behavior. It does not certify live AWS IAM,
-network failures or provider-specific behavior. This branch is an independent
-migration proposal, not a new upstream PyPI release. Related upstream fixes
+network failures or provider-specific behavior. This package is independently maintained and released. Related upstream fixes
 were already proposed in `PR #81 <https://github.com/PyFilesystem/s3fs/pull/81>`_
 (readinto) and `PR #92 <https://github.com/PyFilesystem/s3fs/pull/92>`_
 (preserve_time); the contract suite reproduces those failures.
